@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Gym log">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#E3E5E1">
+<title>Gym log</title>
+<style>
+:root{--bg:#E3E5E1;--panel:#F6F7F4;--ink:#1B2026;--muted:#5C666F;--line:#C8CDC9;--c:#1E4FD8}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Helvetica Neue",Arial,sans-serif;color:var(--ink);background:var(--bg);
+  padding:max(18px,env(safe-area-inset-top)) 14px max(48px,env(safe-area-inset-bottom))}
+.wrap{max-width:720px;margin:0 auto}
+.cond{font-family:"Arial Narrow","Roboto Condensed","Helvetica Neue",sans-serif;font-stretch:condensed}
+h1{font-size:40px;line-height:1;font-weight:800;letter-spacing:-0.02em;margin:0}
+.sub{color:var(--muted);font-size:14px;margin:6px 0 18px}
+.tabs{display:flex;gap:4px;border-bottom:2px solid var(--line);margin-bottom:18px}
+.tabs button{background:none;border:0;padding:10px 14px;font-size:16px;font-weight:600;color:var(--muted);cursor:pointer;
+  border-bottom:3px solid transparent;margin-bottom:-2px}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px}
+.label{font-size:13px;color:var(--muted);font-weight:600;margin-bottom:8px;display:block}
+.groups{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 8px;font-size:15px;font-weight:600;color:var(--ink);cursor:pointer;text-align:center}
+.chip[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.chip.ex{text-align:left;padding:10px 12px}
+.chip.dashed{border-style:dashed;color:var(--muted)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.stepper{display:flex;border:1px solid var(--line);border-radius:10px;background:#fff;overflow:hidden}
+.stepper button{width:46px;border:0;background:var(--bg);cursor:pointer;font-size:22px;font-weight:700;color:var(--ink)}
+.stepper button:active{background:var(--line)}
+.stepper input{flex:1;min-width:0;width:100%;border:0;text-align:center;font-size:28px;font-weight:800;padding:10px 4px;background:#fff;color:var(--ink)}
+.stepper input:focus{outline:none;background:#EEF2FF}
+.input,select{width:100%;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:16px;background:#fff;color:var(--ink);font-family:inherit}
+textarea.input{min-height:90px;font-size:13px;font-family:monospace}
+.btn{border:0;border-radius:10px;padding:14px 18px;font-size:17px;font-weight:700;cursor:pointer;color:#fff;background:var(--c);width:100%}
+.btn:active{opacity:.85}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);width:auto;padding:10px 14px;font-size:14px;font-weight:600}
+.icon{background:none;border:0;cursor:pointer;color:var(--muted);padding:8px;font-size:16px;border-radius:6px}
+.hint{font-size:14px;color:var(--muted);margin-top:12px}
+.hint b{color:var(--ink)}
+.addrow{display:flex;gap:8px;margin-top:10px;align-items:center}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
+.stat{background:var(--panel);border:1px solid var(--line);border-top:5px solid var(--c);border-radius:0 0 10px 10px;padding:10px 12px}
+.big{font-size:28px;font-weight:800;line-height:1.05}
+.small{font-size:13px;color:var(--muted)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--bg);flex-wrap:wrap}
+.seg button{border:0;background:none;padding:9px 12px;font-size:14px;font-weight:600;cursor:pointer;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.chartbox{position:relative;height:260px;margin-top:16px}
+dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:10px 0 0;font-size:14px}
+dt{color:var(--muted)}dd{margin:0;font-weight:600;text-align:right}
+.day{font-size:14px;font-weight:700;color:var(--muted);margin:18px 0 8px}
+.entry{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:6px}
+.entry .main{flex:1;min-width:0}
+.entry .ex{font-weight:600;font-size:15px}
+.entry .meta{font-size:12px;color:var(--muted)}
+.entry .set{font-weight:800;font-size:18px;white-space:nowrap}
+.empty{text-align:center;color:var(--muted);padding:28px 12px;font-size:15px}
+.toast{position:fixed;left:50%;bottom:max(20px,env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:#fff;
+  padding:12px 18px;border-radius:10px;font-weight:600;font-size:15px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,.25);max-width:90vw}
+@media (max-width:420px){h1{font-size:32px}.big{font-size:23px}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+/* ---------- data ---------- */
+const GROUPS = ["Biceps","Triceps","Shoulders","Chest","Back","Lats"];
+const DEFAULTS = {
+  Biceps:["Barbell Curl","Dumbbell Curl","Hammer Curl"],
+  Triceps:["Tricep Pushdown","Skull Crushers","Overhead Extension"],
+  Shoulders:["Overhead Press","Lateral Raise","Rear Delt Fly"],
+  Chest:["Bench Press","Incline Dumbbell Press","Cable Fly"],
+  Back:["Barbell Row","Seated Cable Row","Deadlift"],
+  Lats:["Lat Pulldown","Straight-Arm Pulldown","Single-Arm Pulldown"]
+};
+const METRICS = [["e1rm","Estimated 1RM"],["top","Top weight"],["vol","Total volume"]];
+const KEY = "gymProgress:v1";
+
+function load(){
+  try{
+    const d = JSON.parse(localStorage.getItem(KEY));
+    if(d && Array.isArray(d.entries)) return {entries:d.entries, custom:d.custom||{}};
+  }catch(e){}
+  return {entries:[], custom:{}};
+}
+let data = load();
+function persist(){
+  try{ localStorage.setItem(KEY, JSON.stringify(data)); return true; }
+  catch(e){ toast("Couldn't save. Private browsing may be on."); return false; }
+}
+
+/* ---------- helpers ---------- */
+const pad = n => String(n).padStart(2,"0");
+const today = () => { const d=new Date(); return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); };
+const toDate = s => { const [y,m,d]=s.split("-").map(Number); return new Date(y,m-1,d); };
+const fmtDate = s => toDate(s).toLocaleDateString("en-GB",{day:"numeric",month:"short"});
+const fmtLong = s => toDate(s).toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short",year:"numeric"});
+const e1rm = (w,r) => r<=1 ? w : w*(1+r/30);
+const r1 = n => Math.round(n*10)/10;
+const newId = () => Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const esc = s => String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const exercises = g => DEFAULTS[g].concat(data.custom[g]||[]);
+const sortEntries = (a,b) => a.date===b.date ? a.id.localeCompare(b.id) : a.date.localeCompare(b.date);
+
+function lastSet(ex){
+  const l = data.entries.filter(e=>e.exercise===ex).sort(sortEntries);
+  return l.length ? l[l.length-1] : null;
+}
+
+/* ---------- ui state ---------- */
+const ui = {tab:"log",group:"Chest",exercise:"Bench Press",weight:"",reps:"",date:today(),
+  pGroup:"Chest",pEx:"Bench Press",metric:"e1rm",confirm:null,adding:false,newEx:""};
+function prefill(){
+  const l = lastSet(ui.exercise);
+  ui.weight = l ? String(l.weight) : "";
+  ui.reps = l ? String(l.reps) : "";
+}
+prefill();
+
+let toastTimer;
+function toast(msg){
+  document.querySelectorAll(".toast").forEach(t=>t.remove());
+  const t=document.createElement("div"); t.className="toast"; t.setAttribute("role","status"); t.textContent=msg;
+  document.body.appendChild(t);
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.remove(),2400);
+}
+
+/* ---------- views ---------- */
+function viewLog(){
+  const l = lastSet(ui.exercise);
+  const todays = data.entries.filter(e=>e.date===ui.date && e.exercise===ui.exercise).sort(sortEntries);
+  return `
+  <section class="card">
+    <span class="label">Muscle group</span>
+    <div class="groups">${GROUPS.map(g=>`<button class="chip" aria-pressed="${ui.group===g}" data-act="group" data-v="${g}">${g}</button>`).join("")}</div>
+    <span class="label" style="margin-top:16px">Exercise</span>
+    <div class="chips">
+      ${exercises(ui.group).map(x=>`<button class="chip ex" aria-pressed="${ui.exercise===x}" data-act="exercise" data-v="${esc(x)}">${esc(x)}</button>`).join("")}
+      ${ui.adding ? "" : `<button class="chip ex dashed" data-act="addopen">+ Add exercise</button>`}
+    </div>
+    ${ui.adding ? `<div class="addrow">
+      <input class="input" id="newex" placeholder="New ${ui.group.toLowerCase()} exercise" maxlength="40" value="${esc(ui.newEx)}">
+      <button class="btn ghost" data-act="addsave">Add</button>
+      <button class="icon" data-act="addcancel" aria-label="Cancel">✕</button></div>` : ""}
+  </section>
+  <section class="card">
+    <div class="row">
+      <div><label class="label" for="w">Weight (kg)</label>
+        <div class="stepper"><button data-act="wdec" aria-label="Decrease weight">−</button>
+        <input id="w" inputmode="decimal" placeholder="0" value="${esc(ui.weight)}">
+        <button data-act="winc" aria-label="Increase weight">+</button></div></div>
+      <div><label class="label" for="r">Reps</label>
+        <div class="stepper"><button data-act="rdec" aria-label="Decrease reps">−</button>
+        <input id="r" inputmode="numeric" placeholder="0" value="${esc(ui.reps)}">
+        <button data-act="rinc" aria-label="Increase reps">+</button></div></div>
+    </div>
+    <div style="margin-top:14px"><label class="label" for="d">Date</label>
+      <input class="input" id="d" type="date" value="${ui.date}" max="${today()}"></div>
+    <div class="hint">${l
+      ? `Last ${esc(ui.exercise)}: <b>${l.weight}kg x ${l.reps}</b> on ${fmtDate(l.date)}`
+      : `No ${esc(ui.exercise)} sets logged yet.`}</div>
+    <button class="btn" style="margin-top:16px" data-act="save">Save set</button>
+  </section>
+  ${todays.length ? `<section class="card"><span class="label">${esc(ui.exercise)} on ${fmtDate(ui.date)}</span>
+    ${todays.map((e,i)=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:15px">
+      <span style="color:var(--muted)">Set ${i+1}</span><b>${e.weight}kg x ${e.reps}</b></div>`).join("")}</section>` : ""}`;
+}
+
+function series(ex, metric){
+  const by = {};
+  data.entries.filter(e=>e.exercise===ex).forEach(e=>{
+    const v = metric==="e1rm" ? e1rm(e.weight,e.reps) : metric==="top" ? e.weight : e.weight*e.reps;
+    by[e.date] = metric==="vol" ? (by[e.date]||0)+v : Math.max(by[e.date]||0, v);
+  });
+  return Object.keys(by).sort().map(d=>({date:d, v:r1(by[d])}));
+}
+
+function stats(ex){
+  const l = data.entries.filter(e=>e.exercise===ex).sort(sortEntries);
+  if(!l.length) return null;
+  const top = l.reduce((b,e)=> e.weight>b.weight || (e.weight===b.weight && e.reps>b.reps) ? e : b);
+  const best = Math.max(...l.map(e=>e1rm(e.weight,e.reps)));
+  const first = Math.max(...l.filter(e=>e.date===l[0].date).map(e=>e1rm(e.weight,e.reps)));
+  return {top, best:r1(best), change:r1(best-first), sets:l.length, days:new Set(l.map(e=>e.date)).size};
+}
+
+function viewProgress(){
+  const s = stats(ui.pEx), pts = series(ui.pEx, ui.metric);
+  const days = new Set(data.entries.map(e=>e.date)).size;
+  const vol = Math.round(data.entries.reduce((a,e)=>a+e.weight*e.reps,0));
+  const note = {e1rm:"Estimated 1RM lets you compare different weight and rep combinations (Epley formula).",
+    top:"Heaviest weight lifted that day.", vol:"Weight x reps added up across all sets that day."}[ui.metric];
+  return `
+  <div class="stats">
+    <div class="stat"><div class="big cond">${data.entries.length}</div><div class="small">sets logged</div></div>
+    <div class="stat"><div class="big cond">${days}</div><div class="small">gym days</div></div>
+    <div class="stat"><div class="big cond">${vol.toLocaleString("en-GB")}</div><div class="small">kg moved</div></div>
+  </div>
+  <section class="card">
+    <div class="row">
+      <div><label class="label" for="pg">Muscle group</label>
+        <select id="pg">${GROUPS.map(g=>`<option ${g===ui.pGroup?"selected":""}>${g}</option>`).join("")}</select></div>
+      <div><label class="label" for="pe">Exercise</label>
+        <select id="pe">${exercises(ui.pGroup).map(x=>`<option value="${esc(x)}" ${x===ui.pEx?"selected":""}>${esc(x)}</option>`).join("")}</select></div>
+    </div>
+    <div style="margin-top:14px" class="seg" role="group" aria-label="Chart metric">
+      ${METRICS.map(([id,l])=>`<button aria-pressed="${ui.metric===id}" data-act="metric" data-v="${id}">${l}</button>`).join("")}
+    </div>
+    ${pts.length
+      ? `<div class="chartbox"><canvas id="chart" role="img" aria-label="Progress chart for ${esc(ui.pEx)}"></canvas></div>`
+      : `<div class="empty">No ${esc(ui.pEx)} sets yet. Log one to start the graph.</div>`}
+    <div class="small" style="margin-top:8px">${note}</div>
+  </section>
+  <section class="stat">
+    <div style="font-weight:700;margin-bottom:6px">${esc(ui.pEx)}</div>
+    ${s ? `<div class="big cond">${s.top.weight}kg x ${s.top.reps}</div>
+      <div class="small">Heaviest set, ${fmtDate(s.top.date)}</div>
+      <dl><dt>Best est. 1RM</dt><dd>${s.best}kg</dd>
+      <dt>Since first day</dt><dd style="color:${s.change>0?"#15803D":s.change<0?"#B91C1C":"inherit"}">${s.change>0?"+":""}${s.change}kg</dd>
+      <dt>Sets / days</dt><dd>${s.sets} / ${s.days}</dd></dl>`
+      : `<div class="small">Nothing logged yet.</div>`}
+  </section>`;
+}
+
+let chart = null;
+function drawChart(){
+  if(chart){ chart.destroy(); chart=null; }
+  const cv = document.getElementById("chart");
+  if(!cv) return;
+  if(typeof Chart==="undefined"){
+    cv.parentElement.innerHTML = '<div class="empty">The chart could not load. Check your connection and reopen.</div>';
+    return;
+  }
+  const pts = series(ui.pEx, ui.metric);
+  chart = new Chart(cv,{type:"line",
+    data:{labels:pts.map(p=>fmtDate(p.date)),
+      datasets:[{data:pts.map(p=>p.v),borderColor:"#1E4FD8",backgroundColor:"#1E4FD8",borderWidth:3,pointRadius:4,tension:.25}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y+"kg"}}},
+      scales:{y:{ticks:{callback:v=>v+"kg"}}}}});
+}
+
+function viewHistory(){
+  const all = [...data.entries].sort((a,b)=>sortEntries(b,a));
+  const groups = [];
+  all.forEach(e=>{
+    const last = groups[groups.length-1];
+    if(last && last.date===e.date) last.items.push(e); else groups.push({date:e.date,items:[e]});
+  });
+  return `
+  ${groups.length ? groups.map(g=>`
+    <div class="day">${fmtLong(g.date)}</div>
+    ${g.items.map(e=>`<div class="entry">
+      <div class="main"><div class="ex">${esc(e.exercise)}</div><div class="meta">${esc(e.group)}</div></div>
+      <div class="set cond">${e.weight}kg x ${e.reps}</div>
+      ${ui.confirm===e.id
+        ? `<button class="btn ghost" style="color:#B91C1C;border-color:#B91C1C" data-act="delok" data-v="${e.id}">Delete?</button>`
+        : `<button class="icon" aria-label="Delete set" data-act="del" data-v="${e.id}">🗑</button>`}
+    </div>`).join("")}`).join("")
+    : `<div class="empty">No sets logged yet. Head to Log a set to add your first one.</div>`}
+  <section class="card" style="margin-top:24px">
+    <span class="label">Backup</span>
+    <div class="small" style="margin-bottom:10px">Your sets live in this browser on this phone. Copy a backup now and then and keep it in Notes. To restore, paste it below and tap Restore.</div>
+    <textarea class="input" id="bk" placeholder="Backup text appears here"></textarea>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="btn ghost" data-act="backup">Copy backup</button>
+      <button class="btn ghost" data-act="restore">Restore from text</button>
+    </div>
+  </section>`;
+}
+
+/* ---------- render ---------- */
+function render(){
+  document.getElementById("app").innerHTML = `<div class="wrap">
+    <h1 class="cond">Gym log</h1>
+    <p class="sub">Your lifts, saved on this phone</p>
+    <nav class="tabs" role="tablist">${[["log","Log a set"],["progress","Progress"],["history","History"]]
+      .map(([id,l])=>`<button role="tab" aria-selected="${ui.tab===id}" data-act="tab" data-v="${id}">${l}</button>`).join("")}</nav>
+    ${ui.tab==="log" ? viewLog() : ui.tab==="progress" ? viewProgress() : viewHistory()}
+  </div>`;
+  if(ui.tab==="progress") drawChart();
+}
+
+/* ---------- actions ---------- */
+function bump(field, delta, min){
+  const n = parseFloat(ui[field]);
+  ui[field] = String(Math.max(min, r1((isNaN(n)?0:n)+delta)));
+  document.getElementById(field==="weight"?"w":"r").value = ui[field];
+}
+
+function addExercise(){
+  const name = ui.newEx.trim();
+  if(!name) return;
+  if(exercises(ui.group).some(x=>x.toLowerCase()===name.toLowerCase())) return toast("That exercise already exists");
+  (data.custom[ui.group] = data.custom[ui.group]||[]).push(name);
+  if(!persist()) return;
+  ui.exercise = name; ui.newEx = ""; ui.adding = false; prefill(); render(); toast("Added "+name);
+}
+
+document.addEventListener("click", async ev=>{
+  const t = ev.target.closest("[data-act]");
+  if(!t) return;
+  const a = t.dataset.act, v = t.dataset.v;
+  if(ui.confirm && a!=="del" && a!=="delok"){ ui.confirm = null; }
+  switch(a){
+    case "tab": ui.tab = v; render(); break;
+    case "group": ui.group = v; ui.exercise = exercises(v)[0]; ui.adding = false; prefill(); render(); break;
+    case "exercise": ui.exercise = v; prefill(); render(); break;
+    case "addopen": ui.adding = true; render(); document.getElementById("newex").focus(); break;
+    case "addcancel": ui.adding = false; ui.newEx = ""; render(); break;
+    case "addsave": addExercise(); break;
+    case "wdec": bump("weight",-2.5,0); break;
+    case "winc": bump("weight",2.5,0); break;
+    case "rdec": bump("reps",-1,0); break;
+    case "rinc": bump("reps",1,0); break;
+    case "save": {
+      const w = parseFloat(ui.weight), r = parseInt(ui.reps,10);
+      if(isNaN(w)||w<0) return toast("Enter a weight in kg");
+      if(isNaN(r)||r<1) return toast("Enter at least 1 rep");
+      data.entries.push({id:newId(),date:ui.date,group:ui.group,exercise:ui.exercise,weight:w,reps:r});
+      if(persist()){ render(); toast("Saved: "+ui.exercise+" "+w+"kg x "+r); }
+      else data.entries.pop();
+      break;
+    }
+    case "metric": ui.metric = v; render(); break;
+    case "del": ui.confirm = v; render(); break;
+    case "delok":
+      data.entries = data.entries.filter(e=>e.id!==v); ui.confirm = null;
+      persist(); render(); toast("Set deleted"); break;
+    case "backup": {
+      const txt = JSON.stringify(data), box = document.getElementById("bk");
+      box.value = txt;
+      try{ await navigator.clipboard.writeText(txt); toast("Backup copied"); }
+      catch(e){ box.focus(); box.select(); toast("Select the text and copy it"); }
+      break;
+    }
+    case "restore": {
+      try{
+        const d = JSON.parse(document.getElementById("bk").value);
+        if(!d || !Array.isArray(d.entries)) throw new Error("bad");
+        const have = new Set(data.entries.map(e=>e.id));
+        let added = 0;
+        d.entries.forEach(e=>{
+          if(e && e.id && e.date && e.exercise && !isNaN(e.weight) && !isNaN(e.reps) && !have.has(e.id)){ data.entries.push(e); added++; }
+        });
+        Object.entries(d.custom||{}).forEach(([g,list])=>{
+          if(!DEFAULTS[g]) return;
+          data.custom[g] = data.custom[g]||[];
+          list.forEach(x=>{ if(!exercises(g).includes(x)) data.custom[g].push(x); });
+        });
+        persist(); render(); toast("Restored "+added+" sets");
+      }catch(e){ toast("That doesn't look like a backup"); }
+      break;
+    }
+  }
+});
+
+document.addEventListener("input", ev=>{
+  const el = ev.target;
+  if(el.id==="w"){ ui.weight = el.value = el.value.replace(/[^0-9.]/g,""); }
+  else if(el.id==="r"){ ui.reps = el.value = el.value.replace(/[^0-9]/g,""); }
+  else if(el.id==="d"){ ui.date = el.value || today(); }
+  else if(el.id==="newex"){ ui.newEx = el.value; }
+});
+document.addEventListener("keydown", ev=>{ if(ev.target.id==="newex" && ev.key==="Enter") addExercise(); });
+document.addEventListener("change", ev=>{
+  const el = ev.target;
+  if(el.id==="pg"){ ui.pGroup = el.value; ui.pEx = exercises(el.value)[0]; render(); }
+  else if(el.id==="pe"){ ui.pEx = el.value; render(); }
+  else if(el.id==="d"){ render(); }
+});
+
+render();
+</script>
+</body>
+</html>
