@@ -1,3 +1,4 @@
 # gym_progress
 
-https://github.com/lcorbett419/gym_progress
+
+https://lcorbett419.github.io/gym_progress/
