@@ -75,11 +75,11 @@ dt{color:var(--muted)}dd{margin:0;font-weight:600;text-align:right}
 /* ---------- data ---------- */
 const GROUPS = ["Biceps","Triceps","Shoulders","Chest","Back","Lats"];
 const DEFAULTS = {
-  Biceps:["Barbell Curl","Dumbbell Curl","Hammer Curl"],
+  Biceps:["Bicep Curl Machine","Preacher Curl","Hammer Curl","Bayesian Cable Curl","Cable Bar Curl"],
   Triceps:["Tricep Pushdown","Skull Crushers","Overhead Extension"],
   Shoulders:["Overhead Press","Lateral Raise","Rear Delt Fly"],
-  Chest:["Bench Press","Incline Dumbbell Press","Cable Fly"],
-  Back:["Barbell Row","Seated Cable Row","Deadlift"],
+  Chest:["Bench Press","Incline Bench Press","Chest Press Machine","Cable Fly"],
+  Back:["Seated Cable Row","Chest-Supported Row Machine","Single-Arm Dumbbell Row","Assisted Pull-Up Machine"],
   Lats:["Lat Pulldown","Straight-Arm Pulldown","Single-Arm Pulldown"]
 };
 const METRICS = [["e1rm","Estimated 1RM"],["top","Top weight"],["vol","Total volume"]];
@@ -109,6 +109,11 @@ const r1 = n => Math.round(n*10)/10;
 const newId = () => Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const esc = s => String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const exercises = g => DEFAULTS[g].concat(data.custom[g]||[]);
+const progressExercises = g => {
+  const list = exercises(g);
+  data.entries.filter(e=>e.group===g).forEach(e=>{ if(!list.includes(e.exercise)) list.push(e.exercise); });
+  return list;
+};
 const sortEntries = (a,b) => a.date===b.date ? a.id.localeCompare(b.id) : a.date.localeCompare(b.date);
 
 function lastSet(ex){
@@ -210,7 +215,7 @@ function viewProgress(){
       <div><label class="label" for="pg">Muscle group</label>
         <select id="pg">${GROUPS.map(g=>`<option ${g===ui.pGroup?"selected":""}>${g}</option>`).join("")}</select></div>
       <div><label class="label" for="pe">Exercise</label>
-        <select id="pe">${exercises(ui.pGroup).map(x=>`<option value="${esc(x)}" ${x===ui.pEx?"selected":""}>${esc(x)}</option>`).join("")}</select></div>
+        <select id="pe">${progressExercises(ui.pGroup).map(x=>`<option value="${esc(x)}" ${x===ui.pEx?"selected":""}>${esc(x)}</option>`).join("")}</select></div>
     </div>
     <div style="margin-top:14px" class="seg" role="group" aria-label="Chart metric">
       ${METRICS.map(([id,l])=>`<button aria-pressed="${ui.metric===id}" data-act="metric" data-v="${id}">${l}</button>`).join("")}
